@@ -1,12 +1,17 @@
 # Spear
 
-![CI](https://github.com/NFIBrokerage/spear/workflows/CI/badge.svg)
-[![Coverage Status](https://coveralls.io/repos/github/NFIBrokerage/spear/badge.svg)](https://coveralls.io/github/NFIBrokerage/spear)
+![CI](https://github.com/TrogonStack/TrogonEventStore-Client-Elixir/actions/workflows/ci.yml/badge.svg)
+[![Integration](https://github.com/TrogonStack/TrogonEventStore-Client-Elixir/actions/workflows/integration.yml/badge.svg)](https://github.com/TrogonStack/TrogonEventStore-Client-Elixir/actions/workflows/integration.yml)
 [![hex.pm version](https://img.shields.io/hexpm/v/spear.svg)](https://hex.pm/packages/spear)
-[![hex.pm license](https://img.shields.io/hexpm/l/spear.svg)](https://github.com/NFIBrokerage/spear/blob/master/LICENSE)
-[![Last Updated](https://img.shields.io/github/last-commit/NFIBrokerage/spear.svg)](https://github.com/NFIBrokerage/spear/commits/main)
+[![hex.pm license](https://img.shields.io/hexpm/l/spear.svg)](https://github.com/TrogonStack/TrogonEventStore-Client-Elixir/blob/main/LICENSE)
+[![Last Updated](https://img.shields.io/github/last-commit/TrogonStack/TrogonEventStore-Client-Elixir.svg)](https://github.com/TrogonStack/TrogonEventStore-Client-Elixir/commits/main)
 
 A sharp EventStoreDB 20+ client backed by mint :yum:
+
+This repository is TrogonStack's downstream fork of
+[`CuatroElixir/spear`](https://github.com/CuatroElixir/spear). It preserves the
+Spear API and package identity while compatibility is established against
+TrogonEventStore.
 
 ## FAQ
 
@@ -78,7 +83,7 @@ spear
 
 We `@NFIBrokerage` already use Spear for some production connections to
 Event Store Cloud. See the roadmap in
-[#7](https://github.com/NFIBrokerage/spear/issues/7) with the plans for
+[#7](https://github.com/CuatroElixir/spear/issues/7) with the plans for
 reaching the v1.0.0 release.
 
 ## Installation
@@ -255,4 +260,4 @@ via [GenStage](https://github.com/elixir-lang/gen_stage) and
 [Broadway](https://github.com/dashbitco/broadway) producers? Check out
 [Volley](https://github.com/NFIBrokerage/volley).
 
-[^1]: https://github.com/NFIBrokerage/spear/issues/66
+[^1]: https://github.com/CuatroElixir/spear/issues/66

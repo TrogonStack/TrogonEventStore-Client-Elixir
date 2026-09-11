@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "bootstrap-sha": "2f5476ae73b35e5a2192eda88aefcf71198a7bfe",
+  "signoff": "SHT Bot <61149376+sht-bot@users.noreply.github.com>",
+  "packages": {
+    ".": {
+      "release-type": "simple",
+      "package-name": "TrogonEventStore-Client-Elixir",
+      "component": "trogon-eventstore-elixir",
+      "include-component-in-tag": true,
+      "include-v-in-tag": true,
+      "tag-separator": "@",
+      "pull-request-title-pattern": "chore${scope}: release${component} ${version}",
+      "bump-minor-pre-major": false,
+      "bump-patch-for-minor-pre-major": false,
+      "extra-files": [
+        {
+          "type": "generic",
+          "path": ".version"
+        }
+      ]
+    }
+  }
+}

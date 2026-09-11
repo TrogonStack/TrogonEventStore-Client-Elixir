@@ -1,0 +1,58 @@
+name: Bug report
+description: Help us improve the Elixir client
+labels:
+  - triage
+body:
+  - type: textarea
+    id: current-behavior
+    attributes:
+      label: Current behavior
+      description: Describe the behavior you observed.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction-steps
+    attributes:
+      label: Steps to reproduce
+      description: Provide the smallest reliable reproduction.
+      placeholder: |
+        1. Configure the client with ...
+        2. Call ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected behavior
+      description: Describe what you expected to happen.
+    validations:
+      required: true
+  - type: input
+    id: client-version
+    attributes:
+      label: Client version
+      placeholder: e.g. v0.1.0
+    validations:
+      required: true
+  - type: input
+    id: server-version
+    attributes:
+      label: TrogonEventStore version
+      placeholder: e.g. v0.1.0
+    validations:
+      required: true
+  - type: input
+    id: elixir-version
+    attributes:
+      label: Elixir and OTP versions
+      placeholder: e.g. Elixir 1.16.2, OTP 26.2
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include the operating system and deployment details without credentials or other secrets.
+    validations:
+      required: true

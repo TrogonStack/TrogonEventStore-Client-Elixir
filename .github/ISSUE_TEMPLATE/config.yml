@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Feature request
+    url: https://github.com/TrogonStack/TrogonEventStore-Client-Elixir/discussions/new?category=ideas
+    about: Request a feature for the Elixir client
+  - name: Ask a question
+    url: https://github.com/TrogonStack/TrogonEventStore-Client-Elixir/discussions/new?category=q-a
+    about: Ask questions and discuss the client with the community

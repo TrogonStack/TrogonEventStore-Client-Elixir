@@ -1,7 +1,7 @@
 defmodule Spear.MixProject do
   use Mix.Project
 
-  @source_url "https://github.com/NFIBrokerage/spear"
+  @source_url "https://github.com/TrogonStack/TrogonEventStore-Client-Elixir"
   @version_file Path.join(__DIR__, ".version")
   @external_resource @version_file
   @version (case Regex.run(~r/^v([\d\.\w-]+)/, File.read!(@version_file), capture: :all_but_first) do
@@ -17,16 +17,6 @@ defmodule Spear.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       test_coverage: [tool: ExCoveralls],
-      preferred_cli_env: [
-        credo: :test,
-        coveralls: :test,
-        "coveralls.html": :test,
-        "coveralls.github": :test,
-        inch: :dev,
-        bless: :test,
-        test: :test,
-        dialyzer: :dev
-      ],
       name: "Spear",
       source_url: @source_url,
       deps: deps(),
@@ -37,6 +27,21 @@ defmodule Spear.MixProject do
         plt_add_apps: [:jason],
         plt_core_path: "priv/plts",
         plt_local_path: "priv/plts"
+      ]
+    ]
+  end
+
+  def cli do
+    [
+      preferred_envs: [
+        credo: :test,
+        coveralls: :test,
+        "coveralls.html": :test,
+        "coveralls.github": :test,
+        inch: :dev,
+        bless: :test,
+        test: :test,
+        dialyzer: :dev
       ]
     ]
   end
@@ -73,7 +78,7 @@ defmodule Spear.MixProject do
   defp package do
     [
       name: "spear",
-      files: ~w(lib .formatter.exs mix.exs README.md .version),
+      files: ~w(lib .formatter.exs mix.exs README.md CHANGELOG.md LICENSE .version),
       licenses: ["Apache-2.0"],
       links: %{
         "GitHub" => @source_url,
@@ -134,7 +139,7 @@ defmodule Spear.MixProject do
           Spear.Records.ServerFeatures
         ]
       ],
-      groups_for_functions: [
+      groups_for_docs: [
         "Utility Functions": &(&1[:api] == :utils),
         Streams: &(&1[:api] == :streams),
         Users: &(&1[:api] == :users),
