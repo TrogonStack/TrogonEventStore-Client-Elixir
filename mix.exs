@@ -2,12 +2,7 @@ defmodule Spear.MixProject do
   use Mix.Project
 
   @source_url "https://github.com/TrogonStack/TrogonEventStore-Client-Elixir"
-  @version_file Path.join(__DIR__, ".version")
-  @external_resource @version_file
-  @version (case Regex.run(~r/^v([\d\.\w-]+)/, File.read!(@version_file), capture: :all_but_first) do
-              [version] -> version
-              nil -> "0.1.0"
-            end)
+  @version "0.0.0"
 
   def project do
     [
@@ -78,7 +73,7 @@ defmodule Spear.MixProject do
   defp package do
     [
       name: "spear",
-      files: ~w(lib .formatter.exs mix.exs README.md CHANGELOG.md LICENSE .version),
+      files: ~w(lib .formatter.exs mix.exs README.md CHANGELOG.md LICENSE),
       licenses: ["Apache-2.0"],
       links: %{
         "GitHub" => @source_url,
