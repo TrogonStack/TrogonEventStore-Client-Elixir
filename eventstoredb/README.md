@@ -1,6 +1,7 @@
-# EventStoreDB config
+# TrogonEventStore test configuration
 
-This directory contains EventStoreDB configuration used for testing.
+This directory contains TrogonEventStore configuration used for integration
+testing.
 
 ## Certificates
 
@@ -19,8 +20,8 @@ You can inspect a generated certificate with `openssl`:
 openssl x509 -in eventstoredb/certs/node.crt -text
 ```
 
-## EventStoreDB version
+## Server image
 
-We pin the test container to EventStoreDB `23.10.x`, the last release under a
-true open-source license. Starting with `24.10`, EventStoreDB (now "KurrentDB")
-is licensed under the non-OSS Event Store License v2.
+The Docker Compose stack defaults to
+`ghcr.io/trogonstack/trogoneventstore:ci`. Set `TROGON_EVENTSTORE_IMAGE` to
+verify the client against another fully qualified image.

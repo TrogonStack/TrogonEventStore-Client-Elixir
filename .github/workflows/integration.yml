@@ -1,0 +1,63 @@
+name: Integration
+
+on:
+  workflow_dispatch:
+    inputs:
+      server_image:
+        description: Fully qualified TrogonEventStore container image
+        required: false
+        default: ghcr.io/trogonstack/trogoneventstore:ci
+        type: string
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  EVENTSTORE_HOST: 127.0.0.1
+  EVENTSTORE_VERSION: 23.10.8
+  MIX_ENV: test
+  TROGON_EVENTSTORE_IMAGE: ${{ inputs.server_image || 'ghcr.io/trogonstack/trogoneventstore:ci' }}
+
+jobs:
+  integration:
+    name: TrogonEventStore
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install Elixir and Erlang
+        uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
+        with:
+          elixir-version: 1.16.2
+          otp-version: 26.2
+      - name: Cache dependencies and build
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            deps
+            _build
+          key: ${{ runner.os }}-elixir-1.16.2-otp-26.2-test-${{ hashFiles('mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-elixir-1.16.2-otp-26.2-test-
+      - name: Install package managers
+        run: |
+          mix local.hex --force
+          mix local.rebar --force
+      - name: Install dependencies
+        run: mix deps.get
+      - name: Generate test certificates
+        run: ./eventstoredb/gen-certs.sh
+      - name: Start TrogonEventStore
+        run: docker compose up --detach --wait eventstore
+      - name: Run integration tests
+        run: mix test --exclude version_incompatible --max-cases 2
+      - name: Show TrogonEventStore logs
+        if: failure()
+        run: docker compose logs eventstore
+      - name: Stop TrogonEventStore
+        if: always()
+        run: docker compose down --volumes --remove-orphans

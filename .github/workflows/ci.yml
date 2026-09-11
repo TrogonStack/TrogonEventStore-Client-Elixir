@@ -1,234 +1,104 @@
 name: CI
 
 on:
-  push:
   pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+env:
+  ELIXIR_VERSION: 1.16.2
+  OTP_VERSION: 26.2
 
 jobs:
-  bless:
-    name: Bless
-    runs-on: ubuntu-22.04
+  test:
+    name: Build and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     env:
-      MIX_ENV: test
-      EVENTSTORE_HOST: localhost
       EVENTSTORE_VERSION: 23.10.8
-
+      MIX_ENV: test
     steps:
-    - name: Checkout
-      uses: actions/checkout@v7
-
-    - name: Generate EventStoreDB certificates
-      run: ./eventstoredb/gen-certs.sh
-
-    - name: Spawn docker compose EventStoreDB container
-      run: docker compose up --detach eventstore
-
-    - name: Determine the elixir version
-      run: echo "ELIXIR_VERSION=$(grep -h elixir .tool-versions | awk '{ print $2 }' | awk -F - '{print $1}')" >> $GITHUB_ENV
-
-    - name: Determine the otp version
-      run: echo "OTP_VERSION=$(grep -h erlang .tool-versions | awk '{ print $2 }')" >> $GITHUB_ENV
-
-    - name: Setup Elixir and Erlang versions
-      uses: erlef/setup-beam@v1
-      with:
-        otp-version: ${{ env.OTP_VERSION }}
-        elixir-version: ${{ env.ELIXIR_VERSION }}
-
-    - name: Restore the deps cache
-      uses: actions/cache@v6
-      id: deps-cache
-      with:
-        path: deps
-        key: ${{ runner.os }}-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-${{ env.MIX_ENV }}-deps-mixlockhash-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
-        restore-keys: |
-          ${{ runner.os }}-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-${{ env.MIX_ENV }}-deps-
-
-    - name: Restore the _build cache
-      uses: actions/cache@v6
-      id: build-cache
-      with:
-        path: _build
-        key: ${{ runner.os }}-${{ env.ELIXIR_VERSION  }}-${{ env.OTP_VERSION }}-${{ env.MIX_ENV }}-build-mixlockhash-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
-        restore-keys: |
-          ${{ runner.os }}-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-${{ env.MIX_ENV }}-build-
-
-    - name: Fetch mix dependencies
-      if: steps.deps-cache.outputs.cache-hit != 'true'
-      run: |
-        mix local.rebar --force
-        mix local.hex --force
-        mix deps.get
-
-    - name: Compile dependencies
-      if: steps.deps-cache.outputs.cache-hit != 'true'
-      run: mix deps.compile
-
-    - name: Compile
-      run: mix compile --warnings-as-errors --force
-
-    - name: Test that the EventStoreDB container is alive
-      run: docker compose exec --no-TTY eventstore true
-
-    - name: Coveralls
-      # Ordinary operations occasionally exceed Spear's 5s timeout under CI
-      # runner jitter, failing a different test each run. --max-cases 2 keeps
-      # the shared EventStoreDB from being overwhelmed; if a test still trips
-      # the timeout, re-run only the failures serially so transient flakes
-      # self-heal without disabling real tests.
-      run: |
-        mix coveralls.github --max-cases 2 \
-          || mix test --failed --max-cases 1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Check formatting
-      run: mix format --check-formatted
-
-    - name: Credo
-      run: mix credo
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install Elixir and Erlang
+        uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
+        with:
+          elixir-version: ${{ env.ELIXIR_VERSION }}
+          otp-version: ${{ env.OTP_VERSION }}
+      - name: Cache dependencies and build
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            deps
+            _build
+          key: ${{ runner.os }}-elixir-${{ env.ELIXIR_VERSION }}-otp-${{ env.OTP_VERSION }}-test-${{ hashFiles('mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-elixir-${{ env.ELIXIR_VERSION }}-otp-${{ env.OTP_VERSION }}-test-
+      - name: Install package managers
+        run: |
+          mix local.hex --force
+          mix local.rebar --force
+      - name: Install dependencies
+        run: mix deps.get
+      - name: Compile with warnings as errors
+        run: mix compile --warnings-as-errors --force
+      - name: Run server-free tests
+        run: >-
+          mix test
+          test/spear/acl_test.exs
+          test/spear/client_test.exs
+          test/spear/connection/configuration_test.exs
+          test/spear/connection/keep_alive_timer_test.exs
+          test/spear/event_test.exs
+          test/spear/filter_test.exs
+          test/spear/grpc/response_test.exs
+          test/spear/uuid_test.exs
+      - name: Check formatting
+        run: mix format --check-formatted
+      - name: Run Credo
+        run: mix credo
+      - name: Build Hex package
+        run: mix hex.build
 
   dialyzer:
     name: Dialyzer
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
     env:
       MIX_ENV: dev
-
     steps:
-    - name: Checkout
-      uses: actions/checkout@v7
-
-    - name: Setup the latest Elixir and Erlang versions
-      uses: erlef/setup-beam@v1
-      id: beam
-      with:
-        otp-version: latest
-        elixir-version: latest
-
-    - name: Restore the deps cache
-      uses: actions/cache@v6
-      id: deps-cache
-      with:
-        path: deps
-        key: ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-${{ env.MIX_ENV }}-deps-mixlockhash-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
-        restore-keys: |
-          ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-${{ env.MIX_ENV }}-deps-
-
-    - name: Restore the _build cache
-      uses: actions/cache@v6
-      id: build-cache
-      with:
-        path: _build
-        key: ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-${{ env.MIX_ENV }}-build-mixlockhash-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
-        restore-keys: |
-          ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-${{ env.MIX_ENV }}-build-
-
-    - name: Fetch mix dependencies
-      if: steps.deps-cache.outputs.cache-hit != 'true'
-      run: |
-        mix local.rebar --force
-        mix local.hex --force
-        mix deps.get
-
-    - name: Restore the PLT cache
-      uses: actions/cache/restore@v6
-      id: plt-cache
-      with:
-        path: priv/plts
-        key: ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-plt-mixlockhash-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
-        restore-keys: |
-          ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-plt-
-
-    - name: Build the PLTs
-      if: steps.plt-cache.outputs.cache-hit != 'true'
-      run: mix dialyzer --plt
-
-    - name: Save the PLT cache
-      # Saved separately from the restore so the PLTs are cached even when
-      # the Dialyzer step below fails.
-      uses: actions/cache/save@v6
-      if: steps.plt-cache.outputs.cache-hit != 'true'
-      with:
-        path: priv/plts
-        key: ${{ steps.plt-cache.outputs.cache-primary-key }}
-
-    - name: Dialyzer
-      run: mix dialyzer --format github
-
-  publish-hex-package:
-    name: Publish Hex Package ⬆️☁️
-    runs-on: ubuntu-22.04
-    if: startsWith(github.ref, 'refs/tags/v')
-    # Needed for `gh release create`
-    permissions:
-      contents: write
-    env:
-      MIX_ENV: dev
-    needs:
-    - bless
-
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v7
-
-    - name: Determine the elixir version
-      run: echo "ELIXIR_VERSION=$(grep -h elixir .tool-versions | awk '{ print $2 }' | awk -F - '{print $1}')" >> $GITHUB_ENV
-
-    - name: Determine the otp version
-      run: echo "OTP_VERSION=$(grep -h erlang .tool-versions | awk '{ print $2 }')" >> $GITHUB_ENV
-
-    - name: Setup Elixir and Erlang versions
-      uses: erlef/setup-beam@v1
-      with:
-        otp-version: ${{ env.OTP_VERSION }}
-        elixir-version: ${{ env.ELIXIR_VERSION }}
-
-    - name: Restore the deps cache
-      uses: actions/cache@v6
-      id: deps-cache
-      with:
-        path: deps
-        key: ${{ runner.os }}-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-${{ env.MIX_ENV }}-deps-mixlockhash-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
-        restore-keys: |
-          ${{ runner.os }}-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-${{ env.MIX_ENV }}-deps-
-
-    - name: Restore the _build cache
-      uses: actions/cache@v6
-      id: build-cache
-      with:
-        path: _build
-        key: ${{ runner.os }}-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-${{ env.MIX_ENV }}-build-mixlockhash-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
-        restore-keys: |
-          ${{ runner.os }}-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-${{ env.MIX_ENV }}-build-
-
-    - name: Fetch mix dependencies
-      if: steps.deps-cache.outputs.cache-hit != 'true'
-      run: |
-        mix local.rebar --force
-        mix local.hex --force
-        mix deps.get
-
-    - name: Compile dependencies
-      if: steps.deps-cache.outputs.cache-hit != 'true'
-      run: mix deps.compile
-
-    - name: Generate documentation
-      run: mix docs
-
-    - name: Determine the tag version
-      env:
-        GITHUB_REF: ${{ github.ref }}
-      run: echo "TAG=$(echo "$GITHUB_REF" | awk -F / '{print $3}')" >> $GITHUB_ENV
-
-    - name: Write the tag version to .version
-      run: echo $TAG > .version
-
-    - name: Create a GitHub Release
-      run: gh release create "$TAG" --title "$TAG" --verify-tag --generate-notes
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Publish library
-      run: mix hex.publish --yes
-      env:
-        HEX_API_KEY: ${{ secrets.HEX_PUBLISH_KEY }}
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install Elixir and Erlang
+        uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
+        with:
+          elixir-version: ${{ env.ELIXIR_VERSION }}
+          otp-version: ${{ env.OTP_VERSION }}
+      - name: Cache dependencies, build, and PLTs
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            deps
+            _build
+            priv/plts
+          key: ${{ runner.os }}-elixir-${{ env.ELIXIR_VERSION }}-otp-${{ env.OTP_VERSION }}-dev-${{ hashFiles('mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-elixir-${{ env.ELIXIR_VERSION }}-otp-${{ env.OTP_VERSION }}-dev-
+      - name: Install package managers
+        run: |
+          mix local.hex --force
+          mix local.rebar --force
+      - name: Install dependencies
+        run: mix deps.get
+      - name: Run Dialyzer
+        run: mix dialyzer --format github
+      - name: Build documentation
+        run: mix docs --warnings-as-errors
