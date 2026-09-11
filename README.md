@@ -1,4 +1,4 @@
-# Spear
+# TrogonEventStore Elixir client
 
 ![CI](https://github.com/TrogonStack/TrogonEventStore-Client-Elixir/actions/workflows/ci.yml/badge.svg)
 [![Integration](https://github.com/TrogonStack/TrogonEventStore-Client-Elixir/actions/workflows/integration.yml/badge.svg)](https://github.com/TrogonStack/TrogonEventStore-Client-Elixir/actions/workflows/integration.yml)
@@ -6,12 +6,13 @@
 [![hex.pm license](https://img.shields.io/hexpm/l/spear.svg)](https://github.com/TrogonStack/TrogonEventStore-Client-Elixir/blob/main/LICENSE)
 [![Last Updated](https://img.shields.io/github/last-commit/TrogonStack/TrogonEventStore-Client-Elixir.svg)](https://github.com/TrogonStack/TrogonEventStore-Client-Elixir/commits/main)
 
-A sharp EventStoreDB 20+ client backed by mint :yum:
+An Elixir gRPC client for TrogonEventStore backed by Mint.
 
-This repository is TrogonStack's downstream fork of
-[`CuatroElixir/spear`](https://github.com/CuatroElixir/spear). It preserves the
-Spear API and package identity while compatibility is established against
-TrogonEventStore.
+The client currently preserves the Spear API and package identity while
+compatibility is established against TrogonEventStore.
+
+This project contains modifications by Straw Hat, LLC to software received
+under the Apache License 2.0. See [LICENSE](LICENSE) for the license terms.
 
 ## FAQ
 
@@ -40,10 +41,9 @@ to implement gRPC with a nice HTTP2 library like mint :slightly_smiling_face:.
 
 **Why not [`elixir-grpc/grpc`](https://github.com/elixir-grpc/grpc)?**
 
-That project looks good but it depends on
-[`:gun`](https://github.com/ninenines/gun) which doesn't play nice with
-other dependencies[^1]. It also provides a server and client implementation in
-one library. This library only needs a client.
+That project historically depended on
+[`:gun`](https://github.com/ninenines/gun), while this client only needs a
+Mint-backed client implementation.
 
 > [!NOTE]
 > This is not true anymore: `elixir-grpc/grpc` has supported a Mint adapter since v0.6.0
@@ -57,10 +57,9 @@ Yep! As of v0.1.3, custom and public CAs may be used for encrypted connections.
 
 Sadly no. This library only provides a gRPC client which showed up in
 EventStoreDB 20+. If you're looking for a similarly fashioned TCP client,
-NFIBrokerage uses
 [`exponentially/extreme`](https://github.com/exponentially/extreme) extensively
-in production (specifically the v1.0.0 branch). Spear and Extreme have
-compatible dependencies and similar styles of making connections.
+provides an older transport option. Spear and Extreme have compatible
+dependencies and similar styles of making connections.
 
 **How many dependencies are we talking here?**
 
@@ -81,10 +80,8 @@ spear
 
 **How close is this to being able to be used?**
 
-We `@NFIBrokerage` already use Spear for some production connections to
-Event Store Cloud. See the roadmap in
-[#7](https://github.com/CuatroElixir/spear/issues/7) with the plans for
-reaching the v1.0.0 release.
+Compatibility with TrogonEventStore is still being established. The manual
+integration workflow tracks that work independently from server-free CI.
 
 ## Installation
 
@@ -254,10 +251,4 @@ iex> Spear.stream!(conn, "LongStream") |> Enum.count
 </details>
 
 And that's the basics! Check out the [Spear documentation on
-hex](https://hexdocs.pm/spear/Spear.html). Interested in writing
-efficient event-processing pipelines and topologies with EventStoreDB
-via [GenStage](https://github.com/elixir-lang/gen_stage) and
-[Broadway](https://github.com/dashbitco/broadway) producers? Check out
-[Volley](https://github.com/NFIBrokerage/volley).
-
-[^1]: https://github.com/CuatroElixir/spear/issues/66
+Hex](https://hexdocs.pm/spear/Spear.html).

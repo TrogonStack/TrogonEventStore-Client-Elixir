@@ -1,5 +1,7 @@
 # TrogonEventStore test configuration
 
+Modified by Straw Hat, LLC in 2026.
+
 This directory contains TrogonEventStore configuration used for integration
 testing.
 

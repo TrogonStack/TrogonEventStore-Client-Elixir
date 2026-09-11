@@ -1,3 +1,4 @@
+# Modified by Straw Hat, LLC in 2026.
 services:
   eventstore:
     image: ${TROGON_EVENTSTORE_IMAGE:-ghcr.io/trogonstack/trogoneventstore:ci}

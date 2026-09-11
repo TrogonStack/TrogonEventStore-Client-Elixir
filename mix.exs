@@ -1,3 +1,4 @@
+# Modified by Straw Hat, LLC in 2026.
 defmodule Spear.MixProject do
   use Mix.Project
 
